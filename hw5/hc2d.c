@@ -258,6 +258,7 @@ int main()
   dt = 0.1 / kdiff * (min_dx_dy * min_dx_dy);   // Ensure r satisfies the stability condition
   num_time_steps = (int)((ten-tst)/dt) + 1;     // why add 1 to this?
   it_print = num_time_steps/5;                 // write out approximately 5 intermediate results
+  printf("dt = %.8f num_time_steps = %d it_print = %d\n", dt, num_time_steps, it_print);
 
   // start time stepping loop
   for(it=0; it<num_time_steps; it++)

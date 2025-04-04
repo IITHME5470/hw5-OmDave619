@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include<mpi.h>
+#include <mpi.h>
 
 void grid(int nx, int nxglob, int istglob, int ienglob, double xstglob, double xenglob, double *x, double *dx)
 {
@@ -344,7 +344,7 @@ void output_soln(int rank, int nx, int ny, int it, double tcurr, double *x, doub
   FILE* fp;
   char fname[100];
 
-  sprintf(fname, "T_x_y_%06d_%04d.dat", it, rank);
+  sprintf(fname, "T_x_y_%06d_%04d_par.dat", it, rank);
   //printf("\n%s\n", fname);
 
   fp = fopen(fname, "w");
@@ -381,7 +381,7 @@ int main(int argc, char** argv)
   // read inputs
   if(rank==0)
   {
-    fid = fopen("input2d.in", "r");
+    fid = fopen("input2d_par.in", "r");
     fscanf(fid, "%d %d\n", &nxglob, &nyglob);
     fscanf(fid, "%lf %lf %lf %lf\n", &xstglob, &xenglob, &ystglob, &yenglob);
     fscanf(fid, "%lf %lf %lf %lf\n", &tst, &ten, &dt, &t_print);

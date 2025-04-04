@@ -1,0 +1,4 @@
+Rank 2 => rank_x=0, rank_y=1
+Local domain i=[0..399], j=[400..799]
+Local nx=400, ny=400
+Local x-range=0.0000..0.5000, y-range=0.5000..1.0000
