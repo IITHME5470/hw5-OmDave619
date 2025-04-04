@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # ----- Parameters -----
-tid = 2553
+tid = 12769
 filename = f"T_x_y_{tid:06d}.dat"
 
 # ----- Read Data -----
@@ -28,7 +28,7 @@ plt.figure()
 contour = plt.contourf(x, y, T.T, levels=50, cmap='jet')
 plt.xlabel('x')
 plt.ylabel('y')
-plt.title(f't = {tid:06d}')
+plt.title(f'Serial solution at t = {tid:06d}')
 plt.xlim([-0.05, 1.05])
 plt.ylim([-0.05, 1.05])
 plt.clim([-0.05, 1.05])

@@ -8,28 +8,27 @@
    1. Domain-Decomposition Helper
    ------------------------------------------------------------------ */
 void get_processor_grid_ranks(int rank, int size, int px, int py,
-                              int *rank_x, int *rank_y)
-{
-  // Calculate the 2D processor grid coordinates (rank_x, rank_y)
-  // based on the linear rank. Assumes row-major mapping (or adjust if needed).
-  // Standard mapping: ranks fill row by row.
-  // Example px=4, py=2:
-  // Rank 0: (0,0)  Rank 1: (1,0)  Rank 2: (2,0)  Rank 3: (3,0)
-  // Rank 4: (0,1)  Rank 5: (1,1)  Rank 6: (2,1)  Rank 7: (3,1)
-  // *rank_x = rank % px;
-  // *rank_y = rank / px;
+                              int* rank_x, int* rank_y) {
+    // Calculate the 2D processor grid coordinates (rank_x, rank_y)
+    // based on the linear rank. Assumes row-major mapping (or adjust if needed).
+    // Standard mapping: ranks fill row by row.
+    // Example px=4, py=2:
+    // Rank 0: (0,0)  Rank 1: (1,0)  Rank 2: (2,0)  Rank 3: (3,0)
+    // Rank 4: (0,1)  Rank 5: (1,1)  Rank 6: (2,1)  Rank 7: (3,1)
+    // *rank_x = rank % px;
+    // *rank_y = rank / px;
 
-  // Let's try the mapping implied by the main logic (istglob/jstglob calculations):
-  // Example px=2, py=4:
-  // Rank 0: (0, 0) -> ist=0*nx, jst=0*ny
-  // Rank 1: (1, 0) -> ist=1*nx, jst=0*ny
-  // Rank 2: (0, 1) -> ist=0*nx, jst=1*ny
-  // Rank 3: (1, 1) -> ist=1*nx, jst=1*ny
-  // Rank 4: (0, 2) -> ist=0*nx, jst=2*ny
-  // Rank 5: (1, 2) -> ist=1*nx, jst=2*ny
-  // This seems to correspond to:
-  *rank_x = rank % px; // Column index
-  *rank_y = rank / px; // Row index
+    // Let's try the mapping implied by the main logic (istglob/jstglob calculations):
+    // Example px=2, py=4:
+    // Rank 0: (0, 0) -> ist=0*nx, jst=0*ny
+    // Rank 1: (1, 0) -> ist=1*nx, jst=0*ny
+    // Rank 2: (0, 1) -> ist=0*nx, jst=1*ny
+    // Rank 3: (1, 1) -> ist=1*nx, jst=1*ny
+    // Rank 4: (0, 2) -> ist=0*nx, jst=2*ny
+    // Rank 5: (1, 2) -> ist=1*nx, jst=2*ny
+    // This seems to correspond to:
+    *rank_x = rank % px; // Column index
+    *rank_y = rank / px; // Row index
 }
 
 /* ------------------------------------------------------------------
@@ -38,18 +37,17 @@ void get_processor_grid_ranks(int rank, int size, int px, int py,
 void grid(int nx_local, int nx_global,
           int istglob, int ienglob, // Global start/end indices for this rank
           double xstglob, double xenglob,
-          double *x, double *dx)
-{
-  int i;
+          double* x, double* dx) {
+    int i;
 
-  // Calculate global dx (same for all processes)
-  *dx = (xenglob - xstglob) / (double)(nx_global - 1);
+    // Calculate global dx (same for all processes)
+    *dx = (xenglob - xstglob) / (double)(nx_global - 1);
 
-  // Calculate local coordinates based on global indices
-  for (i = 0; i < nx_local; i++) {
-    // The i-th local point corresponds to the (istglob + i)-th global point
-    x[i] = xstglob + (double)(istglob + i) * (*dx);
-  }
+    // Calculate local coordinates based on global indices
+    for (i = 0; i < nx_local; i++) {
+        // The i-th local point corresponds to the (istglob + i)-th global point
+        x[i] = xstglob + (double)(istglob + i) * (*dx);
+    }
 }
 
 /* ------------------------------------------------------------------
@@ -58,39 +56,38 @@ void grid(int nx_local, int nx_global,
 void enforce_bcs(int nx, int ny, // Local dimensions
                  int rank_x, int rank_y, // Processor coordinates
                  int px, int py,         // Processor grid size
-                 double **T)
-{
-  int i, j;
+                 double** T) {
+    int i, j;
 
-  // Apply BCs ONLY if the process is on the GLOBAL boundary
+    // Apply BCs ONLY if the process is on the GLOBAL boundary
 
-  // Left global boundary (x=0)
-  if (rank_x == 0) {
-    for (j = 0; j < ny; j++) {
-      T[0][j] = 0.0;
+    // Left global boundary (x=0)
+    if (rank_x == 0) {
+        for (j = 0; j < ny; j++) {
+            T[0][j] = 0.0;
+        }
     }
-  }
 
-  // Right global boundary (x=1)
-  if (rank_x == px - 1) {
-    for (j = 0; j < ny; j++) {
-      T[nx - 1][j] = 0.0;
+    // Right global boundary (x=1)
+    if (rank_x == px - 1) {
+        for (j = 0; j < ny; j++) {
+            T[nx - 1][j] = 0.0;
+        }
     }
-  }
 
-  // Bottom global boundary (y=0)
-  if (rank_y == 0) {
-    for (i = 0; i < nx; i++) {
-      T[i][0] = 0.0;
+    // Bottom global boundary (y=0)
+    if (rank_y == 0) {
+        for (i = 0; i < nx; i++) {
+            T[i][0] = 0.0;
+        }
     }
-  }
 
-  // Top global boundary (y=1)
-  if (rank_y == py - 1) {
-    for (i = 0; i < nx; i++) {
-      T[i][ny - 1] = 0.0;
+    // Top global boundary (y=1)
+    if (rank_y == py - 1) {
+        for (i = 0; i < nx; i++) {
+            T[i][ny - 1] = 0.0;
+        }
     }
-  }
 }
 
 // Helper for initial condition function
@@ -98,42 +95,41 @@ double initial_T(double x, double y, double dx, double dy) {
     double del = 1.0; // As in serial code
     // Use the physical coordinates x, y directly
     return 0.25 * (tanh((x - 0.4) / (del * dx)) - tanh((x - 0.6) / (del * dx))) *
-                  (tanh((y - 0.4) / (del * dy)) - tanh((y - 0.6) / (del * dy)));
+        (tanh((y - 0.4) / (del * dy)) - tanh((y - 0.6) / (del * dy)));
 }
 
 
 void set_initial_condition(int nx, int ny,     // Local dimensions
                            int rank_x, int rank_y, // Processor coordinates
                            int px, int py,         // Processor grid size
-                           double *x, double *y, // Local coordinate arrays
-                           double **T,
+                           double* x, double* y, // Local coordinate arrays
+                           double** T,
                            double dx, double dy) // Global grid spacings
 {
-  int i, j;
+    int i, j;
 
-  for (i = 0; i < nx; i++) {
-    for (j = 0; j < ny; j++) {
-        // Use the local coordinate arrays x[i], y[j] which hold the correct physical values
-        T[i][j] = initial_T(x[i], y[j], dx, dy);
+    for (i = 0; i < nx; i++) {
+        for (j = 0; j < ny; j++) {
+            // Use the local coordinate arrays x[i], y[j] which hold the correct physical values
+            T[i][j] = initial_T(x[i], y[j], dx, dy);
+        }
     }
-  }
 
-  // Ensure BCs are satisfied at t = 0 on global boundaries
-  enforce_bcs(nx, ny, rank_x, rank_y, px, py, T);
+    // Ensure BCs are satisfied at t = 0 on global boundaries
+    enforce_bcs(nx, ny, rank_x, rank_y, px, py, T);
 }
 
 /* ------------------------------------------------------------------
    4. Halo Exchange Routines
    ------------------------------------------------------------------ */
 
-// Exchanges data with Left/Right neighbors
+   // Exchanges data with Left/Right neighbors
 void halo_exchange_2d_x(int rank, int rank_x, int rank_y,
                         int size, int px, int py,
                         int nx, int ny,
-                        double **T,
-                        double *xleftghost, double *xrightghost,
-                        double *sendbuf_x, double *recvbuf_x)
-{
+                        double** T,
+                        double* xleftghost, double* xrightghost,
+                        double* sendbuf_x, double* recvbuf_x) {
     MPI_Status status;
     int tag_left = 0;  // Tag for sending left, receiving from right
     int tag_right = 1; // Tag for sending right, receiving from left
@@ -159,10 +155,11 @@ void halo_exchange_2d_x(int rank, int rank_x, int rank_y,
         for (int j = 0; j < ny; ++j) {
             xleftghost[j] = recvbuf_x[j];
         }
-    } else {
+    }
+    else {
         // If no left neighbor, boundary condition applies (T=0 for this problem)
         // This ghost data would be used if calculating RHS at i=0.
-         for (int j = 0; j < ny; ++j) {
+        for (int j = 0; j < ny; ++j) {
             xleftghost[j] = 0.0;
         }
     }
@@ -175,15 +172,16 @@ void halo_exchange_2d_x(int rank, int rank_x, int rank_y,
             sendbuf_x[j] = T[0][j]; // Pack first column
         }
     }
-     MPI_Sendrecv(sendbuf_x, ny, MPI_DOUBLE, left_nbr, tag_left,
-                 recvbuf_x, ny, MPI_DOUBLE, right_nbr, tag_left,
-                 MPI_COMM_WORLD, &status);
+    MPI_Sendrecv(sendbuf_x, ny, MPI_DOUBLE, left_nbr, tag_left,
+                recvbuf_x, ny, MPI_DOUBLE, right_nbr, tag_left,
+                MPI_COMM_WORLD, &status);
     // If we received data (i.e., right_nbr exists), copy it to ghost buffer
     if (right_nbr != MPI_PROC_NULL) {
         for (int j = 0; j < ny; ++j) {
             xrightghost[j] = recvbuf_x[j];
         }
-    } else {
+    }
+    else {
         // If no right neighbor, boundary condition applies (T=0 for this problem)
         // This ghost data would be used if calculating RHS at i=nx-1.
         for (int j = 0; j < ny; ++j) {
@@ -197,10 +195,9 @@ void halo_exchange_2d_x(int rank, int rank_x, int rank_y,
 void halo_exchange_2d_y(int rank, int rank_x, int rank_y,
                         int size, int px, int py,
                         int nx, int ny,
-                        double **T,
-                        double *ybotghost, double *ytopghost,
-                        double *sendbuf_y, double *recvbuf_y)
-{
+                        double** T,
+                        double* ybotghost, double* ytopghost,
+                        double* sendbuf_y, double* recvbuf_y) {
     MPI_Status status;
     int tag_bot = 2; // Tag for sending bottom, receiving from top
     int tag_top = 3; // Tag for sending top, receiving from bottom
@@ -223,10 +220,11 @@ void halo_exchange_2d_y(int rank, int rank_x, int rank_y,
                  MPI_COMM_WORLD, &status);
     // If we received data (i.e., bot_nbr exists), copy it to ghost buffer
     if (bot_nbr != MPI_PROC_NULL) {
-         for (int i = 0; i < nx; ++i) {
-             ybotghost[i] = recvbuf_y[i];
-         }
-    } else {
+        for (int i = 0; i < nx; ++i) {
+            ybotghost[i] = recvbuf_y[i];
+        }
+    }
+    else {
         // If no bottom neighbor, boundary condition applies (T=0)
         for (int i = 0; i < nx; ++i) {
             ybotghost[i] = 0.0;
@@ -247,11 +245,12 @@ void halo_exchange_2d_y(int rank, int rank_x, int rank_y,
     // If we received data (i.e., top_nbr exists), copy it to ghost buffer
     if (top_nbr != MPI_PROC_NULL) {
         for (int i = 0; i < nx; ++i) {
-             ytopghost[i] = recvbuf_y[i];
-         }
-    } else {
+            ytopghost[i] = recvbuf_y[i];
+        }
+    }
+    else {
         // If no top neighbor, boundary condition applies (T=0)
-         for (int i = 0; i < nx; ++i) {
+        for (int i = 0; i < nx; ++i) {
             ytopghost[i] = 0.0;
         }
     }
@@ -263,10 +262,10 @@ void halo_exchange_2d_y(int rank, int rank_x, int rank_y,
    ------------------------------------------------------------------ */
 void get_rhs(int nx, int ny,             // Local dimensions
              double dx, double dy,
-             double *xleftghost, double *xrightghost,
-             double *ybotghost, double *ytopghost,
+             double* xleftghost, double* xrightghost,
+             double* ybotghost, double* ytopghost,
              double kdiff,
-             double **T, double **rhs)   // T is local temp, rhs is output
+             double** T, double** rhs)   // T is local temp, rhs is output
 {
     int i, j;
     double T_im1, T_ip1, T_jm1, T_jp1;
@@ -278,14 +277,14 @@ void get_rhs(int nx, int ny,             // Local dimensions
     for (i = 0; i < nx; i++) {
         for (j = 0; j < ny; j++) {
             // Get neighbors' T values, using ghost buffers for edge cases
-            T_im1 = (i == 0)    ? xleftghost[j]  : T[i - 1][j];
+            T_im1 = (i == 0) ? xleftghost[j] : T[i - 1][j];
             T_ip1 = (i == nx - 1) ? xrightghost[j] : T[i + 1][j];
-            T_jm1 = (j == 0)    ? ybotghost[i]   : T[i][j - 1];
-            T_jp1 = (j == ny - 1) ? ytopghost[i]   : T[i][j + 1];
+            T_jm1 = (j == 0) ? ybotghost[i] : T[i][j - 1];
+            T_jp1 = (j == ny - 1) ? ytopghost[i] : T[i][j + 1];
 
             // Compute the Laplacian using central differences
             rhs[i][j] = kdiff * (T_ip1 + T_im1 - 2.0 * T[i][j]) / dxsq +
-                        kdiff * (T_jp1 + T_jm1 - 2.0 * T[i][j]) / dysq;
+                kdiff * (T_jp1 + T_jm1 - 2.0 * T[i][j]) / dysq;
         }
     }
     // Note: We don't need to worry about physical boundary conditions (T=0)
@@ -302,13 +301,12 @@ void timestep_FwdEuler(int rank, int size,
                        int px, int py,
                        int nx, int ny,            // Local dimensions
                        double dt, double dx, double dy, // Time/Grid steps
-                       double *xleftghost, double *xrightghost,
-                       double *ybotghost, double *ytopghost,
+                       double* xleftghost, double* xrightghost,
+                       double* ybotghost, double* ytopghost,
                        double kdiff,
-                       double **T, double **rhs, // Input T, Output T, uses rhs internally
-                       double *sendbuf_x, double *recvbuf_x,
-                       double *sendbuf_y, double *recvbuf_y)
-{
+                       double** T, double** rhs, // Input T, Output T, uses rhs internally
+                       double* sendbuf_x, double* recvbuf_x,
+                       double* sendbuf_y, double* recvbuf_y) {
     int i, j;
 
     // 1. Exchange halo data (populate ghost buffers)
@@ -329,8 +327,8 @@ void timestep_FwdEuler(int rank, int size,
             kdiff, T, rhs);
 
     // 3. Update T using Forward Euler (for all local points)
-    for(i = 0; i < nx; i++) {
-        for(j = 0; j < ny; j++) {
+    for (i = 0; i < nx; i++) {
+        for (j = 0; j < ny; j++) {
             T[i][j] += dt * rhs[i][j];
         }
     }
@@ -343,8 +341,7 @@ void timestep_FwdEuler(int rank, int size,
    6. Output Routines
    ------------------------------------------------------------------ */
 void output_soln(int rank, int nx, int ny, int it, double tcurr,
-                 double *x, double *y, double **T)
-{
+                 double* x, double* y, double** T) {
     int i, j;
     FILE* fp;
     char fname[100];
@@ -369,8 +366,8 @@ void output_soln(int rank, int nx, int ny, int it, double tcurr,
         for (j = 0; j < ny; j++) {
             fprintf(fp, "%15.8e %15.8e %15.8e\n", x[i], y[j], T[i][j]);
         }
-         // Add a blank line after each row in x (gnuplot likes this for pm3d map)
-         // fprintf(fp, "\n");
+        // Add a blank line after each row in x (gnuplot likes this for pm3d map)
+        // fprintf(fp, "\n");
     }
     fclose(fp);
 
@@ -385,20 +382,19 @@ void output_soln(int rank, int nx, int ny, int it, double tcurr,
 
 // Function for the halo check requested in the prompt
 void check_halo_exchange(int rank, int rank_x, int rank_y, int px, int py,
-                         int nx, int ny, double **T,
-                         double *xleftghost, double *xrightghost,
-                         double *ybotghost, double *ytopghost,
-                         double *sendbuf_x, double *recvbuf_x,
-                         double *sendbuf_y, double *recvbuf_y)
-{
+                         int nx, int ny, double** T,
+                         double* xleftghost, double* xrightghost,
+                         double* ybotghost, double* ytopghost,
+                         double* sendbuf_x, double* recvbuf_x,
+                         double* sendbuf_y, double* recvbuf_y) {
     int i, j;
     FILE* fp_check;
     char fname_check[100];
 
     // 1. Assign unique values based on rank and local indices
     if (rank == 0) printf("\n--- Performing Halo Exchange Check ---\n");
-    for(i = 0; i < nx; i++){
-        for(j = 0; j < ny; j++){
+    for (i = 0; i < nx; i++) {
+        for (j = 0; j < ny; j++) {
             // Using a large base for rank to avoid overlap with i+j
             T[i][j] = (double)(rank * 10000 + i * 100 + j);
         }
@@ -406,12 +402,12 @@ void check_halo_exchange(int rank, int rank_x, int rank_y, int px, int py,
     MPI_Barrier(MPI_COMM_WORLD); // Ensure all ranks set T before exchanging
 
     // 2. Perform ONE halo exchange
-     halo_exchange_2d_x(rank, rank_x, rank_y, px*py, px, py,
-                       nx, ny, T,
-                       xleftghost, xrightghost,
-                       sendbuf_x, recvbuf_x);
+    halo_exchange_2d_x(rank, rank_x, rank_y, px * py, px, py,
+                      nx, ny, T,
+                      xleftghost, xrightghost,
+                      sendbuf_x, recvbuf_x);
 
-    halo_exchange_2d_y(rank, rank_x, rank_y, px*py, px, py,
+    halo_exchange_2d_y(rank, rank_x, rank_y, px * py, px, py,
                        nx, ny, T,
                        ybotghost, ytopghost,
                        sendbuf_y, recvbuf_y);
@@ -421,7 +417,7 @@ void check_halo_exchange(int rank, int rank_x, int rank_y, int px, int py,
     // 3. Print ghost buffer contents to a file per rank
     sprintf(fname_check, "halo_check_%04d.dat", rank);
     fp_check = fopen(fname_check, "w");
-    if(!fp_check) {
+    if (!fp_check) {
         fprintf(stderr, "Rank %d Error opening %s for writing!\n", rank, fname_check);
         return; // Don't abort for check file
     }
@@ -431,15 +427,17 @@ void check_halo_exchange(int rank, int rank_x, int rank_y, int px, int py,
     fprintf(fp_check, "\nxleftghost (received from rank %d):\n", (rank_x > 0) ? rank - 1 : -1);
     if (rank_x > 0) { // Only print if expected to receive from left
         for (j = 0; j < ny; ++j) fprintf(fp_check, "j=%d : %f\n", j, xleftghost[j]);
-    } else {
+    }
+    else {
         fprintf(fp_check, "(Boundary - Should be 0.0)\n");
-         for (j = 0; j < ny; ++j) fprintf(fp_check, "j=%d : %f\n", j, xleftghost[j]); // Print BCs too
+        for (j = 0; j < ny; ++j) fprintf(fp_check, "j=%d : %f\n", j, xleftghost[j]); // Print BCs too
     }
 
     fprintf(fp_check, "\nxrightghost (received from rank %d):\n", (rank_x < px - 1) ? rank + 1 : -1);
-     if (rank_x < px - 1) { // Only print if expected to receive from right
+    if (rank_x < px - 1) { // Only print if expected to receive from right
         for (j = 0; j < ny; ++j) fprintf(fp_check, "j=%d : %f\n", j, xrightghost[j]);
-    } else {
+    }
+    else {
         fprintf(fp_check, "(Boundary - Should be 0.0)\n");
         for (j = 0; j < ny; ++j) fprintf(fp_check, "j=%d : %f\n", j, xrightghost[j]);
     }
@@ -447,17 +445,19 @@ void check_halo_exchange(int rank, int rank_x, int rank_y, int px, int py,
     fprintf(fp_check, "\nybotghost (received from rank %d):\n", (rank_y > 0) ? rank - px : -1);
     if (rank_y > 0) { // Only print if expected to receive from bottom
         for (i = 0; i < nx; ++i) fprintf(fp_check, "i=%d : %f\n", i, ybotghost[i]);
-    } else {
-         fprintf(fp_check, "(Boundary - Should be 0.0)\n");
-         for (i = 0; i < nx; ++i) fprintf(fp_check, "i=%d : %f\n", i, ybotghost[i]);
+    }
+    else {
+        fprintf(fp_check, "(Boundary - Should be 0.0)\n");
+        for (i = 0; i < nx; ++i) fprintf(fp_check, "i=%d : %f\n", i, ybotghost[i]);
     }
 
     fprintf(fp_check, "\nytopghost (received from rank %d):\n", (rank_y < py - 1) ? rank + px : -1);
     if (rank_y < py - 1) { // Only print if expected to receive from top
         for (i = 0; i < nx; ++i) fprintf(fp_check, "i=%d : %f\n", i, ytopghost[i]);
-    } else {
-         fprintf(fp_check, "(Boundary - Should be 0.0)\n");
-         for (i = 0; i < nx; ++i) fprintf(fp_check, "i=%d : %f\n", i, ytopghost[i]);
+    }
+    else {
+        fprintf(fp_check, "(Boundary - Should be 0.0)\n");
+        for (i = 0; i < nx; ++i) fprintf(fp_check, "i=%d : %f\n", i, ytopghost[i]);
     }
 
     fclose(fp_check);
@@ -471,10 +471,9 @@ void check_halo_exchange(int rank, int rank_x, int rank_y, int px, int py,
 /* ------------------------------------------------------------------
    7. Main
    ------------------------------------------------------------------ */
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     int nxglob, nyglob, rank, size, px, py, rank_x, rank_y;
-    double *x = NULL, *y = NULL, **T = NULL, **rhs = NULL;
+    double* x = NULL, * y = NULL, ** T = NULL, ** rhs = NULL;
     double tst, ten, xstglob, xenglob, ystglob, yenglob;
     double dx = 0.0, dy = 0.0, dt = 0.0, tcurr = 0.0, kdiff = 0.0;
     int i, j, it, num_time_steps = 0, it_print = 1;
@@ -516,17 +515,17 @@ int main(int argc, char** argv)
             MPI_Abort(MPI_COMM_WORLD, 1);
         }
         if (nxglob % px != 0 || nyglob % py != 0) {
-             fprintf(stderr, "Error: nxglob (%d) must be divisible by px (%d), ", nxglob, px);
-             fprintf(stderr, "and nyglob (%d) must be divisible by py (%d).\n", nyglob, py);
-             MPI_Abort(MPI_COMM_WORLD, 1);
+            fprintf(stderr, "Error: nxglob (%d) must be divisible by px (%d), ", nxglob, px);
+            fprintf(stderr, "and nyglob (%d) must be divisible by py (%d).\n", nyglob, py);
+            MPI_Abort(MPI_COMM_WORLD, 1);
         }
         if (kdiff <= 0) {
-             fprintf(stderr, "Error: kdiff (%.3f) must be positive.\n", kdiff);
-             MPI_Abort(MPI_COMM_WORLD, 1);
+            fprintf(stderr, "Error: kdiff (%.3f) must be positive.\n", kdiff);
+            MPI_Abort(MPI_COMM_WORLD, 1);
         }
-         if (ten <= tst) {
-             fprintf(stderr, "Error: ten (%.3f) must be greater than tst (%.3f).\n", ten, tst);
-             MPI_Abort(MPI_COMM_WORLD, 1);
+        if (ten <= tst) {
+            fprintf(stderr, "Error: ten (%.3f) must be greater than tst (%.3f).\n", ten, tst);
+            MPI_Abort(MPI_COMM_WORLD, 1);
         }
         // --- End Sanity Checks ---
 
@@ -539,13 +538,13 @@ int main(int argc, char** argv)
         // The factor 0.1 used is safer (more conservative) than 0.5 / (1/min_dx_dy^2 + 1/min_dx_dy^2) = 0.25 * min_dx_dy^2
         dt = 0.1 / kdiff * (min_dx_dy * min_dx_dy);
         if (dt <= 0) { // Prevent zero or negative dt
-             fprintf(stderr, "Error: Calculated dt (%.8e) is non-positive. Check inputs (kdiff, dx, dy).\n", dt);
-             MPI_Abort(MPI_COMM_WORLD, 1);
+            fprintf(stderr, "Error: Calculated dt (%.8e) is non-positive. Check inputs (kdiff, dx, dy).\n", dt);
+            MPI_Abort(MPI_COMM_WORLD, 1);
         }
         num_time_steps = (int)((ten - tst) / dt); // Number of steps to take
         if (num_time_steps <= 0) {
-             fprintf(stderr, "Warning: num_time_steps (%d) is non-positive. ten might be too close to tst or dt too large. Setting num_time_steps=1.\n", num_time_steps);
-             num_time_steps = 1;
+            fprintf(stderr, "Warning: num_time_steps (%d) is non-positive. ten might be too close to tst or dt too large. Setting num_time_steps=1.\n", num_time_steps);
+            num_time_steps = 1;
         }
         it_print = num_time_steps / 10; // Print approx 10 intermediate results + final
         if (it_print <= 0) it_print = 1; // Ensure printing happens
@@ -577,16 +576,16 @@ int main(int argc, char** argv)
     }
     MPI_Bcast(sendarr_int, 6, MPI_INT, 0, MPI_COMM_WORLD);
     if (rank != 0) { // Unpack on other ranks
-        nxglob      = sendarr_int[0];
-        nyglob      = sendarr_int[1];
+        nxglob = sendarr_int[0];
+        nyglob = sendarr_int[1];
         num_time_steps = sendarr_int[2];
-        it_print    = sendarr_int[3];
-        px          = sendarr_int[4];
-        py          = sendarr_int[5];
+        it_print = sendarr_int[3];
+        px = sendarr_int[4];
+        py = sendarr_int[5];
     }
 
     // Pack doubles into an array
-    double sendarr_dbl[8]; // Add dx, dy, kdiff
+    double sendarr_dbl[10]; // <<<<< CORRECT SIZE IS 10
     if (rank == 0) {
         sendarr_dbl[0] = tst;
         sendarr_dbl[1] = ten;
@@ -595,23 +594,23 @@ int main(int argc, char** argv)
         sendarr_dbl[4] = xenglob;
         sendarr_dbl[5] = ystglob;
         sendarr_dbl[6] = yenglob;
-        sendarr_dbl[7] = kdiff; // Broadcast kdiff too
-        // dx and dy were calculated on rank 0, broadcast them too
-        sendarr_dbl[8] = dx;
-        sendarr_dbl[9] = dy;
+        sendarr_dbl[7] = kdiff;
+        sendarr_dbl[8] = dx;    // Now within bounds
+        sendarr_dbl[9] = dy;    // Now within bounds
     }
-     MPI_Bcast(sendarr_dbl, 10, MPI_DOUBLE, 0, MPI_COMM_WORLD); // Size is 10 now
-     if (rank != 0) { // Unpack on other ranks
-        tst      = sendarr_dbl[0];
-        ten      = sendarr_dbl[1];
-        dt       = sendarr_dbl[2];
-        xstglob  = sendarr_dbl[3];
-        xenglob  = sendarr_dbl[4];
-        ystglob  = sendarr_dbl[5];
-        yenglob  = sendarr_dbl[6];
-        kdiff    = sendarr_dbl[7];
-        dx       = sendarr_dbl[8]; // Receive dx
-        dy       = sendarr_dbl[9]; // Receive dy
+    MPI_Bcast(sendarr_dbl, 10, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(sendarr_dbl, 10, MPI_DOUBLE, 0, MPI_COMM_WORLD); // Size is 10 now
+    if (rank != 0) { // Unpack on other ranks
+        tst = sendarr_dbl[0];
+        ten = sendarr_dbl[1];
+        dt = sendarr_dbl[2];
+        xstglob = sendarr_dbl[3];
+        xenglob = sendarr_dbl[4];
+        ystglob = sendarr_dbl[5];
+        yenglob = sendarr_dbl[6];
+        kdiff = sendarr_dbl[7];
+        dx = sendarr_dbl[8]; // Receive dx
+        dy = sendarr_dbl[9]; // Receive dy
     }
 
     // --- Determine Local Subdomain Parameters ---
@@ -636,40 +635,40 @@ int main(int argc, char** argv)
 
     // --- Allocate Memory ---
     // Local grid coordinate arrays
-    x = (double *)malloc(nx * sizeof(double));
-    y = (double *)malloc(ny * sizeof(double));
+    x = (double*)malloc(nx * sizeof(double));
+    y = (double*)malloc(ny * sizeof(double));
 
     // Local Temperature (T) and RHS arrays (using 2D pointers)
-    T = (double **)malloc(nx * sizeof(double *));
-    rhs = (double **)malloc(nx * sizeof(double *));
+    T = (double**)malloc(nx * sizeof(double*));
+    rhs = (double**)malloc(nx * sizeof(double*));
     // Tnew is not needed for Forward Euler
     // double **Tnew = (double **)malloc(nx * sizeof(double *));
     if (T == NULL || rhs == NULL || x == NULL || y == NULL) {
-         fprintf(stderr, "Rank %d: Error allocating primary arrays\n", rank);
-         MPI_Abort(MPI_COMM_WORLD, 1);
+        fprintf(stderr, "Rank %d: Error allocating primary arrays\n", rank);
+        MPI_Abort(MPI_COMM_WORLD, 1);
     }
     for (i = 0; i < nx; i++) {
-        T[i] = (double *)malloc(ny * sizeof(double));
-        rhs[i] = (double *)malloc(ny * sizeof(double));
+        T[i] = (double*)malloc(ny * sizeof(double));
+        rhs[i] = (double*)malloc(ny * sizeof(double));
         // Tnew[i] = (double *)malloc(ny * sizeof(double));
-        if(T[i] == NULL || rhs[i] == NULL){
-             fprintf(stderr, "Rank %d: Error allocating row %d of T/rhs\n", rank, i);
-             MPI_Abort(MPI_COMM_WORLD, 1);
+        if (T[i] == NULL || rhs[i] == NULL) {
+            fprintf(stderr, "Rank %d: Error allocating row %d of T/rhs\n", rank, i);
+            MPI_Abort(MPI_COMM_WORLD, 1);
         }
     }
 
 
     // Ghost buffers (1D arrays) and Send/Receive buffers
-    double *xleftghost  = (double *)malloc(ny * sizeof(double));
-    double *xrightghost = (double *)malloc(ny * sizeof(double));
-    double *ybotghost   = (double *)malloc(nx * sizeof(double));
-    double *ytopghost   = (double *)malloc(nx * sizeof(double));
-    double *sendbuf_x   = (double *)malloc(ny * sizeof(double));
-    double *recvbuf_x   = (double *)malloc(ny * sizeof(double));
-    double *sendbuf_y   = (double *)malloc(nx * sizeof(double));
-    double *recvbuf_y   = (double *)malloc(nx * sizeof(double));
-     if (!xleftghost || !xrightghost || !ybotghost || !ytopghost ||
-         !sendbuf_x || !recvbuf_x || !sendbuf_y || !recvbuf_y) {
+    double* xleftghost = (double*)malloc(ny * sizeof(double));
+    double* xrightghost = (double*)malloc(ny * sizeof(double));
+    double* ybotghost = (double*)malloc(nx * sizeof(double));
+    double* ytopghost = (double*)malloc(nx * sizeof(double));
+    double* sendbuf_x = (double*)malloc(ny * sizeof(double));
+    double* recvbuf_x = (double*)malloc(ny * sizeof(double));
+    double* sendbuf_y = (double*)malloc(nx * sizeof(double));
+    double* recvbuf_y = (double*)malloc(nx * sizeof(double));
+    if (!xleftghost || !xrightghost || !ybotghost || !ytopghost ||
+        !sendbuf_x || !recvbuf_x || !sendbuf_y || !recvbuf_y) {
         fprintf(stderr, "Rank %d: Error allocating halo/comm buffers\n", rank);
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
@@ -713,7 +712,7 @@ int main(int argc, char** argv)
     MPI_Barrier(MPI_COMM_WORLD); // Ensure IC is set and written before timing starts
 
     // --- Main Time-Stepping Loop ---
-    if(rank == 0) printf("Starting time stepping...\n");
+    if (rank == 0) printf("Starting time stepping...\n");
     time_start = MPI_Wtime(); // Start timer
 
     for (it = 0; it < num_time_steps; it++) {
@@ -730,7 +729,7 @@ int main(int argc, char** argv)
         // Output solution periodically (check step count, not time)
         // Output based on iteration count (it starts from 0)
         // Check if (it+1) is a multiple of it_print, or if it's the last step
-         if ((it + 1) % it_print == 0 || it == num_time_steps - 1) {
+        if ((it + 1) % it_print == 0 || it == num_time_steps - 1) {
             output_soln(rank, nx, ny, it + 1, tcurr, x, y, T);
             MPI_Barrier(MPI_COMM_WORLD); // Optional: sync after output
         }
@@ -761,11 +760,11 @@ int main(int argc, char** argv)
     for (i = 0; i < nx; i++) {
         free(T[i]);
         free(rhs[i]);
-       // free(Tnew[i]); // Not allocated
+        // free(Tnew[i]); // Not allocated
     }
     free(T);
     free(rhs);
-   // free(Tnew); // Not allocated
+    // free(Tnew); // Not allocated
 
     free(xleftghost);
     free(xrightghost);

@@ -5,7 +5,7 @@ import re
 
 # ----- User-Defined Parameters -----
 # Time-step identifier to plot (must match the output file naming)
-tid = 12768
+tid = 2552
 # Processor grid dimensions (must match the ones used during the run)
 px = 2  # number of processors in x-direction
 py = 2  # number of processors in y-direction
@@ -86,10 +86,10 @@ plt.figure()
 contour = plt.contourf(X, Y, global_T.T, levels=50, cmap='jet')
 plt.xlabel('x')
 plt.ylabel('y')
-plt.title(f'Parallel solution at t = {tid:06d}')
+plt.title(f'Parallel ({px}x{py}) solution at t = {tid:06d}')
 plt.xlim([-0.05, 1.05])
 plt.ylim([-0.05, 1.05])
 plt.clim([-0.05, 1.05])
 plt.colorbar(contour)
-plt.savefig(f'cont_T_parallel_{tid:06d}.png', dpi=300)
+plt.savefig(f'cont_T_parallel_{tid:06d}_{px}x{py}.png', dpi=300)
 plt.show()

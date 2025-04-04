@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
+
+
 
 void grid(int nx, double xst, double xen, double *x, double *dx)
 {
@@ -260,6 +263,7 @@ int main()
   it_print = num_time_steps/5;                 // write out approximately 5 intermediate results
   printf("dt = %.8f num_time_steps = %d it_print = %d\n", dt, num_time_steps, it_print);
 
+  clock_t start = clock();
   // start time stepping loop
   for(it=0; it<num_time_steps; it++)
   {
@@ -276,8 +280,15 @@ int main()
       output_soln(nx,ny,it,tcurr,x,y,T);
   }
 
+
   // output soln at the last time step
   output_soln(nx,ny,it,tcurr,x,y,T);
+
+  clock_t end = clock();
+  double elapsed = (double)(end - start) / CLOCKS_PER_SEC;
+  double time_per_step = elapsed / num_time_steps;
+  printf("Total simulation time: %f seconds\n", elapsed);
+  printf("Time per time step: %f seconds\n", time_per_step);
 
   //for(i=0; i<nx; i++)
   //  free(T[i]);
