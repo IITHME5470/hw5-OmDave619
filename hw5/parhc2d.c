@@ -4,36 +4,12 @@
 #include <mpi.h>
 #include <string.h> // For memcpy if needed, though loops are clearer here
 
-/* ------------------------------------------------------------------
-   1. Domain-Decomposition Helper
-   ------------------------------------------------------------------ */
 void get_processor_grid_ranks(int rank, int size, int px, int py,
                               int* rank_x, int* rank_y) {
-    // Calculate the 2D processor grid coordinates (rank_x, rank_y)
-    // based on the linear rank. Assumes row-major mapping (or adjust if needed).
-    // Standard mapping: ranks fill row by row.
-    // Example px=4, py=2:
-    // Rank 0: (0,0)  Rank 1: (1,0)  Rank 2: (2,0)  Rank 3: (3,0)
-    // Rank 4: (0,1)  Rank 5: (1,1)  Rank 6: (2,1)  Rank 7: (3,1)
-    // *rank_x = rank % px;
-    // *rank_y = rank / px;
-
-    // Let's try the mapping implied by the main logic (istglob/jstglob calculations):
-    // Example px=2, py=4:
-    // Rank 0: (0, 0) -> ist=0*nx, jst=0*ny
-    // Rank 1: (1, 0) -> ist=1*nx, jst=0*ny
-    // Rank 2: (0, 1) -> ist=0*nx, jst=1*ny
-    // Rank 3: (1, 1) -> ist=1*nx, jst=1*ny
-    // Rank 4: (0, 2) -> ist=0*nx, jst=2*ny
-    // Rank 5: (1, 2) -> ist=1*nx, jst=2*ny
-    // This seems to correspond to:
     *rank_x = rank % px; // Column index
     *rank_y = rank / px; // Row index
 }
 
-/* ------------------------------------------------------------------
-   2. Grid Generation
-   ------------------------------------------------------------------ */
 void grid(int nx_local, int nx_global,
           int istglob, int ienglob, // Global start/end indices for this rank
           double xstglob, double xenglob,
@@ -50,9 +26,6 @@ void grid(int nx_local, int nx_global,
     }
 }
 
-/* ------------------------------------------------------------------
-   3. Boundary Conditions, Initial Condition
-   ------------------------------------------------------------------ */
 void enforce_bcs(int nx, int ny, // Local dimensions
                  int rank_x, int rank_y, // Processor coordinates
                  int px, int py,         // Processor grid size
@@ -119,9 +92,6 @@ void set_initial_condition(int nx, int ny,     // Local dimensions
     enforce_bcs(nx, ny, rank_x, rank_y, px, py, T);
 }
 
-/* ------------------------------------------------------------------
-   4. Halo Exchange Routines
-   ------------------------------------------------------------------ */
 
    // Exchanges data with Left/Right neighbors
 void halo_exchange_2d_x(int rank, int rank_x, int rank_y,
@@ -337,9 +307,6 @@ void timestep_FwdEuler(int rank, int size,
     enforce_bcs(nx, ny, rank_x, rank_y, px, py, T);
 }
 
-/* ------------------------------------------------------------------
-   6. Output Routines
-   ------------------------------------------------------------------ */
 void output_soln(int rank, int nx, int ny, int it, double tcurr,
                  double* x, double* y, double** T) {
     int i, j;
@@ -468,9 +435,6 @@ void check_halo_exchange(int rank, int rank_x, int rank_y, int px, int py,
 }
 
 
-/* ------------------------------------------------------------------
-   7. Main
-   ------------------------------------------------------------------ */
 int main(int argc, char** argv) {
     int nxglob, nyglob, rank, size, px, py, rank_x, rank_y;
     double* x = NULL, * y = NULL, ** T = NULL, ** rhs = NULL;
@@ -585,7 +549,7 @@ int main(int argc, char** argv) {
     }
 
     // Pack doubles into an array
-    double sendarr_dbl[10]; // <<<<< CORRECT SIZE IS 10
+    double sendarr_dbl[10]; //
     if (rank == 0) {
         sendarr_dbl[0] = tst;
         sendarr_dbl[1] = ten;
